@@ -4,28 +4,19 @@
   <meta charset="UTF-8" />
   <title>Bible Reading Tracker</title>
   <style>
-    /*
-      Background: using the provided Nativity image from Adobe Stock.
-      Note: This URL is just a placeholder; replace with your hosted URL if needed.
-    */
     body {
-      background: url('https://www.istockphoto.com/photo/christmas-light-shining-gm1759710489-544710054') no-repeat center center fixed;
+      background: url('autumn-wallpaper-picjumbo-com.jpg') no-repeat center center fixed;
       background-size: cover;
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
       color: #333;
-      /*
-        Optional: If you want to lighten the entire background image itself
-        (before the overlay), you could do something like:
-        filter: brightness(1.2);
-      */
     }
 
     /* A semi-transparent overlay to ensure text and book tiles are visible. */
     #overlay {
       /* White overlay with some transparency. Adjust '0.5' if needed. */
-      background-color: rgba(255, 255, 255, 0.5);
+      background-color: rgba(255, 255, 255, 0.6);
       padding: 20px;
       margin: 0 auto;
       max-width: 900px;
@@ -95,6 +86,53 @@
       color: #444;
     }
 
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    #searchInput {
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      min-width: 200px;
+    }
+
+    #resetButton {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #f28b82;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #resetButton:hover {
+      background-color: #e57373;
+    }
+
+    #progressContainer {
+      text-align: center;
+      margin: 10px 0;
+      color: #000;
+    }
+
+    #progressBar {
+      width: 100%;
+      max-width: 400px;
+      height: 20px;
+    }
+
+    #progressText {
+      display: block;
+      margin-top: 5px;
+    }
+
     @media (max-width: 600px) {
       .book {
         width: 70px;
@@ -109,6 +147,16 @@
   <div id="overlay">
     <h1>Festive Bible Reading Tracker</h1>
     <h2>Click on a Book to Toggle Read/Unread</h2>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Search books..." oninput="renderBooks(this.value)" />
+      <button id="resetButton" onclick="resetProgress()">Reset Progress</button>
+    </div>
+
+    <div id="progressContainer">
+      <progress id="progressBar" max="66" value="0"></progress>
+      <span id="progressText"></span>
+    </div>
 
     <div class="legend">
       <span class="not-read">Not Read</span>
@@ -169,20 +217,43 @@
         savedReadBooks.splice(index, 1); // Mark as unread
       }
       saveReadBooks();
-      renderBooks();
+      renderBooks(document.getElementById("searchInput").value);
     }
 
-    function renderBooks() {
+    function updateProgress() {
+      const count = savedReadBooks.length;
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      if (progressBar) {
+        progressBar.value = count;
+      }
+      if (progressText) {
+        const pct = Math.round((count / allBibleBooks.length) * 100);
+        progressText.textContent = `${count}/${allBibleBooks.length} books read (${pct}%)`;
+      }
+    }
+
+    function resetProgress() {
+      savedReadBooks = [...userReadBooks];
+      saveReadBooks();
+      renderBooks(document.getElementById("searchInput").value);
+    }
+
+    function renderBooks(filter = "") {
       const bookList = document.getElementById("bookList");
       bookList.innerHTML = "";
 
-      allBibleBooks.forEach(book => {
-        const bookDiv = document.createElement("div");
-        bookDiv.className = "book" + (savedReadBooks.includes(book) ? " read" : "");
-        bookDiv.textContent = book;
-        bookDiv.onclick = () => toggleBook(book);
-        bookList.appendChild(bookDiv);
-      });
+      allBibleBooks
+        .filter(book => book.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(book => {
+          const bookDiv = document.createElement("div");
+          bookDiv.className = "book" + (savedReadBooks.includes(book) ? " read" : "");
+          bookDiv.textContent = book;
+          bookDiv.onclick = () => toggleBook(book);
+          bookList.appendChild(bookDiv);
+        });
+
+      updateProgress();
     }
 
     // Initial render
